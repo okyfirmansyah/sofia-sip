@@ -36,6 +36,13 @@
  */
 
 #include <nua_types.h>
+#include <nua_dialog.h>
+#ifndef NUA_H
+#include <sofia-sip/nua.h>
+#endif
+#ifndef NTA_H
+#include <sofia-sip/nta.h>
+#endif
 
 /* Methods for client request. @internal */
 typedef struct {

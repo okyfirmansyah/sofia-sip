@@ -699,6 +699,12 @@ extern nua_client_methods_t const nua_cancel_client_methods;
 extern nua_client_methods_t const nua_update_client_methods;
 extern nua_client_methods_t const nua_prack_client_methods;
 
+#define MULTIPART_MIME_TYPE_STR "multipart/mixed"
+#define MULTIPART_UNIQUE_BOUNDARY_STR "unique-boundary-123"
+
+const char *nua_multipart_mime_type=MULTIPART_MIME_TYPE_STR"; boundary="MULTIPART_UNIQUE_BOUNDARY_STR;
+const char *nua_multipart_unique_boundary=MULTIPART_UNIQUE_BOUNDARY_STR;
+
 int nua_stack_invite(nua_t *nua, nua_handle_t *nh, nua_event_t e,
 		     tagi_t const *tags)
 {
@@ -801,9 +807,6 @@ static int nua_invite_client_request(nua_client_request_t *cr,
     soa_init_offer_answer(nh->nh_soa);
 
     if (soa_is_delayed_offer(nh->nh_soa))
-      offer_sent = 0;
-    else if (sip->sip_payload)
-      /* Kludge, we should probably use multipart */
       offer_sent = 0;
     else if (soa_generate_offer(nh->nh_soa, 0, NULL) < 0)
       return -1;
@@ -4548,8 +4551,30 @@ int session_get_description(sip_t const *sip,
     SU_DEBUG_3(("nua: empty %s, assuming %s\n",
 		"Content-Type", SDP_MIME_TYPE));
   else if (!su_casematch(ct->c_type, SDP_MIME_TYPE)) {
-    SU_DEBUG_5(("nua: unknown %s: %s\n", "Content-Type", ct->c_type));
-    return 0;
+        if (sip->sip_content_type &&
+         !su_casenmatch(ct->c_type, "multipart/", 10)) {
+             SU_DEBUG_5(("nua: unknown %s: %s\n", "Content-Type", ct->c_type));
+             return 0;
+        }
+
+        msg_multipart_t *mp;
+
+        if (sip->sip_multipart)
+            mp = sip->sip_multipart;
+        else
+            mp = msg_multipart_parse(msg_home(sip),
+                                     sip->sip_content_type,
+                                     (sip_payload_t *)sip->sip_payload);
+       while(mp && !su_casematch(mp->mp_content_type->c_type, SDP_MIME_TYPE))
+               mp=mp->mp_next;
+       if (mp)
+       {
+           //mp->
+           matching_content_type = 1;
+           pl=mp->mp_payload;
+       }else
+           return 0;
+
   }
   else
     matching_content_type = 1;

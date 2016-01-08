@@ -216,6 +216,9 @@ int nta_check_session_content(nta_incoming_t *irq,
   sip_content_disposition_t const *cd = sip->sip_content_disposition;
   int acceptable_type = 0, acceptable_encoding = 0;
 
+  if(c)
+      if(su_casematch(c->c_type, "multipart/mixed"))
+          return 0;
   if (sip->sip_payload == NULL)
     return 0;
 

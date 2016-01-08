@@ -172,6 +172,10 @@ typedef struct event_s {
 /** NUA module version */
 SOFIAPUBVAR char const nua_version[];
 
+#ifndef SDP_MIME_TYPE
+#define MULTIPART_MIME_TYPE nua_multipart_mime_type
+#endif
+
 /** Typedef of NUA event callback. */
 typedef void (*nua_callback_f)(nua_event_t event,
 			       int status, char const *phrase,
